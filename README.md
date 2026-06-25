@@ -7,6 +7,8 @@
 Give your agent a long-term memory it can read selectively and update surgically
 without re-reading the entire codebase on every task.
 
+**English** · [简体中文](README.zh-CN.md)
+
 [Why](#why) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Memory model](#memory-model) · [Rules](#the-rules) · [Development](#development)
 
 </div>
