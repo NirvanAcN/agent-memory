@@ -112,6 +112,14 @@ def test_validate_missing_directory(tmp_path):
     assert errors and "Missing memory directory" in errors[0]
 
 
+def test_validate_detects_dangling_registry_pointer(tmp_path):
+    run_bootstrap(tmp_path, features=["Search"])
+    memory_dir = tmp_path / ".codex" / "memory"
+    (memory_dir / "features" / "search.md").unlink()
+    errors = validate.validate(memory_dir)
+    assert any("missing capsule" in e and "search.md" in e for e in errors)
+
+
 def test_custom_memory_dir(tmp_path):
     assert run_bootstrap(tmp_path, features=["Search"], memory_dir=".agent/memory") == 0
     memory_dir = tmp_path / ".agent" / "memory"

@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `--memory-dir` and `--agents-file` flags so the skill works with any agent, not only Codex (defaults stay `.codex/memory` and `AGENTS.md`).
-- `scripts/validate_memory.py`: validates an existing `.codex/memory` tree against the file contract.
+- `scripts/validate_memory.py`: validates an existing memory tree against the file contract, including detecting registry rows that point at missing capsule files.
 - `scripts/test_memory.py`: pytest suite covering bootstrap helpers, idempotency, dry-run, and the validator.
 - `--dry-run` flag for `scripts/bootstrap_memory.py`.
 - Chinese README (`README.zh-CN.md`) and contributing guide (`CONTRIBUTING.zh-CN.md`).

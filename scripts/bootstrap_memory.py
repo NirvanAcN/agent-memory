@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bootstrap a project-local .codex/memory scaffold."""
+"""Bootstrap a project-local agent memory scaffold (default .codex/memory)."""
 
 from __future__ import annotations
 
