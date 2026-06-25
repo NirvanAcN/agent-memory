@@ -63,12 +63,16 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
+DRY_RUN = False
+
+
 def write_changed(path: Path, text: str, changes: list[str], label: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
     old = read_text(path)
     normalized = text.rstrip() + "\n"
     if old != normalized:
-        path.write_text(normalized, encoding="utf-8")
+        if not DRY_RUN:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(normalized, encoding="utf-8")
         changes.append(label)
 
 
@@ -208,7 +212,6 @@ def ensure_feature_registry(path: Path, features: list[str], stamp: str, changes
     else:
         text = feature_registry_template(stamp)
 
-    existing = text
     for feature in features:
         slug = slugify_feature(feature)
         capsule = f"features/{slug}.md"
@@ -216,10 +219,7 @@ def ensure_feature_registry(path: Path, features: list[str], stamp: str, changes
         if capsule not in text:
             text = text.rstrip() + "\n" + row + "\n"
 
-    if text != existing or not path.exists():
-        write_changed(path, text, changes, str(path))
-    else:
-        write_changed(path, text, changes, str(path))
+    write_changed(path, text, changes, str(path))
 
 
 def ensure_decision_log(path: Path, stamp: str, changes: list[str]) -> None:
@@ -294,11 +294,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--project-root", default=".", help="Project root to update. Defaults to cwd.")
     parser.add_argument("--feature", action="append", default=[], help="Feature name to create/register. May be repeated.")
     parser.add_argument("--agents", action="store_true", help="Create or refresh AGENTS.md Project Memory Workflow section.")
+    parser.add_argument("--dry-run", action="store_true", help="Report changes without writing any files.")
     return parser.parse_args()
 
 
 def main() -> int:
+    global DRY_RUN
     args = parse_args()
+    DRY_RUN = args.dry_run
     root = Path(args.project_root).expanduser().resolve()
     stamp = today()
     memory_dir = root / ".codex" / "memory"
@@ -317,8 +320,9 @@ def main() -> int:
     if args.agents:
         upsert_agents_section(root / "AGENTS.md", changes)
 
+    prefix = "Would update:" if DRY_RUN else "Updated:"
     if changes:
-        print("Updated:")
+        print(prefix)
         for item in changes:
             print(f"- {item}")
     else:
