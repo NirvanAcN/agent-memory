@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a project-local .codex/memory tree against the memory file contract."""
+"""Validate a project-local memory tree against the memory file contract."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from pathlib import Path
 
 FEATURE_REGISTRY_HEADER = "| Feature | Entry | Status | Capsule | Last Verified |"
 DECISION_LOG_HEADER = "| Date | Decision | Context | Impact | Revisit Trigger |"
+CAPSULE_POINTER_RE = re.compile(r"`(features/[^`]+\.md)`")
 
 LAST_UPDATED_RE = re.compile(r"^Last Updated:[ \t]*\d{4}-\d{2}-\d{2}[ \t]*$", re.M)
 
@@ -46,8 +47,13 @@ def validate(memory_dir: Path) -> list[str]:
             errors.append(f"{rel}: missing or malformed 'Last Updated: YYYY-MM-DD'")
 
     registry = memory_dir / "feature-registry.md"
-    if registry.is_file() and FEATURE_REGISTRY_HEADER not in registry.read_text(encoding="utf-8"):
-        errors.append("feature-registry.md: missing required table header")
+    if registry.is_file():
+        registry_text = registry.read_text(encoding="utf-8")
+        if FEATURE_REGISTRY_HEADER not in registry_text:
+            errors.append("feature-registry.md: missing required table header")
+        for pointer in sorted(set(CAPSULE_POINTER_RE.findall(registry_text))):
+            if not (memory_dir / pointer).is_file():
+                errors.append(f"feature-registry.md: points at missing capsule '{pointer}'")
 
     decisions = memory_dir / "decision-log.md"
     if decisions.is_file() and DECISION_LOG_HEADER not in decisions.read_text(encoding="utf-8"):
@@ -68,14 +74,15 @@ def validate(memory_dir: Path) -> list[str]:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Validate a .codex/memory tree against the contract.")
+    parser = argparse.ArgumentParser(description="Validate a memory tree against the contract.")
     parser.add_argument("--project-root", default=".", help="Project root to validate. Defaults to cwd.")
+    parser.add_argument("--memory-dir", default=".codex/memory", help="Memory directory relative to project root. Defaults to .codex/memory.")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    memory_dir = Path(args.project_root).expanduser().resolve() / ".codex" / "memory"
+    memory_dir = (Path(args.project_root).expanduser().resolve() / args.memory_dir).resolve()
     errors = validate(memory_dir)
     if errors:
         print("Memory contract violations:")

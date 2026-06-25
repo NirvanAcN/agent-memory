@@ -1,13 +1,13 @@
 ---
 name: agent-memory
-description: Create and maintain project-local Codex memory systems. Use when a user asks to bootstrap `.codex/memory`, create a sustainable agent memory architecture, enforce minimum-read/scoped-write-back rules, add Project Memory Workflow guidance to AGENTS.md, or update project memory files after a task.
+description: Create and maintain project-local agent memory systems. Use when a user asks to bootstrap `.codex/memory` (or a custom memory directory), create a sustainable agent memory architecture, enforce minimum-read/scoped-write-back rules, add Project Memory Workflow guidance to AGENTS.md, or update project memory files after a task.
 ---
 
 # Agent Memory
 
 ## Core Workflow
 
-Use this skill to create or maintain a project-local `.codex/memory` system that agents can update over time without reading the whole codebase.
+Use this skill to create or maintain a project-local memory system (default `.codex/memory`, configurable via the bundled script's `--memory-dir`) that agents can update over time without reading the whole codebase.
 
 Before bootstrapping memory:
 

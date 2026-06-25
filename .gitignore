@@ -35,3 +35,9 @@ temp/
 # Local runtime artifacts
 .codex-local/
 generated-images/
+
+# Generated memory trees (bootstrap output)
+.codex/
+.agent/
+.ci-demo/
+agent-memory-demo/
