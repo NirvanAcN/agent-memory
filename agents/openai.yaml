@@ -1,4 +1,4 @@
 interface:
   display_name: "Agent Memory"
   short_description: "Bootstrap scoped project memory workflows"
-  default_prompt: "Use $agent-memory to bootstrap a project-local .codex/memory workflow."
+  default_prompt: "Use $agent-memory to bootstrap a project-local memory workflow."
