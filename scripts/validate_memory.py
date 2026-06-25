@@ -68,14 +68,15 @@ def validate(memory_dir: Path) -> list[str]:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Validate a .codex/memory tree against the contract.")
+    parser = argparse.ArgumentParser(description="Validate a memory tree against the contract.")
     parser.add_argument("--project-root", default=".", help="Project root to validate. Defaults to cwd.")
+    parser.add_argument("--memory-dir", default=".codex/memory", help="Memory directory relative to project root. Defaults to .codex/memory.")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    memory_dir = Path(args.project_root).expanduser().resolve() / ".codex" / "memory"
+    memory_dir = (Path(args.project_root).expanduser().resolve() / args.memory_dir).resolve()
     errors = validate(memory_dir)
     if errors:
         print("Memory contract violations:")

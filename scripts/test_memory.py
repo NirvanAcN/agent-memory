@@ -24,10 +24,12 @@ bootstrap = _load("bootstrap_memory")
 validate = _load("validate_memory")
 
 
-def run_bootstrap(root: Path, features=None, agents=False):
+def run_bootstrap(root: Path, features=None, agents=False, memory_dir=None):
     argv = ["bootstrap_memory.py", "--project-root", str(root)]
     for feature in features or []:
         argv += ["--feature", feature]
+    if memory_dir:
+        argv += ["--memory-dir", memory_dir]
     if agents:
         argv.append("--agents")
     old = sys.argv
@@ -108,3 +110,11 @@ def test_validate_detects_missing_section(tmp_path):
 def test_validate_missing_directory(tmp_path):
     errors = validate.validate(tmp_path / ".codex" / "memory")
     assert errors and "Missing memory directory" in errors[0]
+
+
+def test_custom_memory_dir(tmp_path):
+    assert run_bootstrap(tmp_path, features=["Search"], memory_dir=".agent/memory") == 0
+    memory_dir = tmp_path / ".agent" / "memory"
+    assert (memory_dir / "features" / "search.md").is_file()
+    assert not (tmp_path / ".codex").exists()
+    assert validate.validate(memory_dir) == []

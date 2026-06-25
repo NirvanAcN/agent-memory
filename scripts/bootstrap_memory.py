@@ -293,7 +293,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Bootstrap a .codex/memory scaffold.")
     parser.add_argument("--project-root", default=".", help="Project root to update. Defaults to cwd.")
     parser.add_argument("--feature", action="append", default=[], help="Feature name to create/register. May be repeated.")
-    parser.add_argument("--agents", action="store_true", help="Create or refresh AGENTS.md Project Memory Workflow section.")
+    parser.add_argument("--memory-dir", default=".codex/memory", help="Memory directory relative to project root. Defaults to .codex/memory.")
+    parser.add_argument("--agents", action="store_true", help="Create or refresh the Project Memory Workflow section in the agents file.")
+    parser.add_argument("--agents-file", default="AGENTS.md", help="Agents instructions file relative to project root. Defaults to AGENTS.md.")
     parser.add_argument("--dry-run", action="store_true", help="Report changes without writing any files.")
     return parser.parse_args()
 
@@ -304,7 +306,7 @@ def main() -> int:
     DRY_RUN = args.dry_run
     root = Path(args.project_root).expanduser().resolve()
     stamp = today()
-    memory_dir = root / ".codex" / "memory"
+    memory_dir = (root / args.memory_dir).resolve()
     features_dir = memory_dir / "features"
     changes: list[str] = []
 
@@ -318,7 +320,7 @@ def main() -> int:
         ensure_capsule(features_dir / f"{slugify_feature(feature)}.md", feature, stamp, changes)
 
     if args.agents:
-        upsert_agents_section(root / "AGENTS.md", changes)
+        upsert_agents_section((root / args.agents_file).resolve(), changes)
 
     prefix = "Would update:" if DRY_RUN else "Updated:"
     if changes:
