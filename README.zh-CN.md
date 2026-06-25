@@ -9,7 +9,7 @@
 
 [简体中文](README.zh-CN.md) · [English](README.md)
 
-[为什么](#为什么) · [工作原理](#工作原理) · [快速开始](#快速开始) · [记忆模型](#记忆模型) · [核心规则](#核心规则) · [开发](#开发)
+[为什么](#为什么) · [工作原理](#工作原理) · [安装](#安装) · [使用](#使用) · [记忆模型](#记忆模型) · [核心规则](#核心规则) · [开发](#开发)
 
 </div>
 
@@ -21,8 +21,8 @@
 重新读文件、重新推导架构、重新学习一天前已经做过的决策。
 这既慢又贵，还不一致。
 
-`agent-memory` 是一个 [Codex](https://openai.com/index/introducing-codex/) skill，
-用于在项目本地创建 **`.codex/memory` 记忆系统**，并提供两项严格保证：
+`agent-memory` 是一个 [Agent Skill](https://www.anthropic.com/news/skills)，
+用于在项目本地创建**记忆系统**（默认 `.codex/memory`），并提供两项严格保证：
 
 - **最小读取**：先通过注册表定位相关胶囊，再只读取该胶囊。
 - **分作回写**：将稳定事实写入最小适用范围，而不是到处都写。
@@ -52,35 +52,63 @@
 跨模块路由、依赖、持久化或全局行为契约时才读取。
 其余情况下一切都局限在单个功能胶囊内。
 
-## 快速开始
+## 安装
 
-在不写入任何文件的情况下预览脚手架：
+`agent-memory` 是一个标准的 [Agent Skill](https://www.anthropic.com/news/skills)
+（一份 `SKILL.md` 加随附脚本），适用于任何支持 skills 格式的智能体。
+将它 clone 到你的智能体 skills 目录即可：
+
+```bash
+git clone https://gitlab.com/jamesedu-group/agent-memory.git \
+  <skills-dir>/agent-memory
+```
+
+| 智能体 | Skills 目录 |
+| --- | --- |
+| Codex | `~/.codex/skills/agent-memory` |
+| Claude Code | `~/.claude/skills/agent-memory` |
+| 其他 / 项目级 | `./.skills/agent-memory` 或你工具的 skills 路径 |
+
+## 使用
+
+你不需要手动跑任何命令。安装后，直接用自然语言告诉智能体，
+它会加载该 skill 并代你调用随附脚本：
+
+> 用 **agent-memory** 为这个项目初始化记忆系统，feature 包括 Search 和 Billing，
+> 并把工作流加到 AGENTS.md。
+
+智能体会创建记忆树、注册功能、配置 agents 文件，之后按
+[契约](references/memory-file-contract.md)读取和更新记忆。
+
+### 默认位置
+
+记忆默认创建在 `.codex/memory` 下。若你的智能体使用其他约定，
+可让它指定不同目录（例如 `.agent/memory`）；两个随附脚本都接受 `--memory-dir`。
+
+### 手动 / 进阶调用
+
+随附脚本是智能体调用的实现细节，但你也可以直接运行它们用于调试或 CI。
+先预览不写入：
 
 ```bash
 python3 scripts/bootstrap_memory.py --project-root . --feature "Search" --dry-run
 ```
 
-正式创建记忆系统：
+正式创建、校验，并可选自定义位置：
 
 ```bash
-python3 scripts/bootstrap_memory.py \
-  --project-root . \
-  --feature "Search" \
-  --feature "Billing" \
-  --agents
-```
-
-按契约校验现有记忆树：
-
-```bash
+python3 scripts/bootstrap_memory.py --project-root . --feature "Search" --feature "Billing" --agents
 python3 scripts/validate_memory.py --project-root .
+python3 scripts/bootstrap_memory.py --project-root . --memory-dir .agent/memory --feature "Search"
 ```
 
 | 参数 | 说明 |
 | --- | --- |
 | `--project-root` | 目标项目根目录，默认为当前目录。 |
 | `--feature` | 要创建并注册的功能胶囊，可重复传入。 |
-| `--agents` | 在 `AGENTS.md` 中创建或刷新 `Project Memory Workflow` 节。 |
+| `--memory-dir` | 相对于项目根目录的记忆目录，默认 `.codex/memory`。 |
+| `--agents` | 在 agents 文件中创建或刷新 `Project Memory Workflow` 节。 |
+| `--agents-file` | agents 指令文件，默认 `AGENTS.md`。 |
 | `--dry-run` | 只报告将要发生的变更，不触碰文件系统。 |
 
 引导脚本是**幂等**的：它创建缺失文件、刷新新鲜度标记、确保必需的

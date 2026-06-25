@@ -9,7 +9,7 @@ without re-reading the entire codebase on every task.
 
 **English** · [简体中文](README.zh-CN.md)
 
-[Why](#why) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Memory model](#memory-model) · [Rules](#the-rules) · [Development](#development)
+[Why](#why) · [How it works](#how-it-works) · [Install](#install) · [Usage](#usage) · [Memory model](#memory-model) · [Rules](#the-rules) · [Development](#development)
 
 </div>
 
@@ -21,8 +21,9 @@ Agents are great at solving tasks and terrible at remembering them. Each session
 starts cold: the agent re-reads files, re-derives architecture, and re-learns
 decisions it already made yesterday. That is slow, expensive, and inconsistent.
 
-`agent-memory` is a [Codex](https://openai.com/index/introducing-codex/) skill that
-bootstraps a **project-local `.codex/memory` system** with two strict guarantees:
+`agent-memory` is an [Agent Skill](https://www.anthropic.com/news/skills) that
+bootstraps a **project-local memory system** (default `.codex/memory`) with two
+strict guarantees:
 
 - **Minimum read** — locate the relevant capsule through a registry, then read only that capsule.
 - **Scoped write-back** — persist stable facts to the smallest applicable scope, never to everything.
@@ -52,35 +53,65 @@ Global context (`project-memory.md`, `decision-log.md`) is read **only** when a
 task touches cross-module routing, dependencies, persistence, or global behavior
 contracts. Everything else stays local to a single feature capsule.
 
-## Quick start
+## Install
 
-Preview the scaffold without writing anything:
+`agent-memory` is a standard [Agent Skill](https://www.anthropic.com/news/skills)
+(a `SKILL.md` plus bundled scripts), so it works with any agent that supports the
+skills format. Clone it into your agent's skills directory:
+
+```bash
+git clone https://gitlab.com/jamesedu-group/agent-memory.git \
+  <skills-dir>/agent-memory
+```
+
+| Agent | Skills directory |
+| --- | --- |
+| Codex | `~/.codex/skills/agent-memory` |
+| Claude Code | `~/.claude/skills/agent-memory` |
+| Other / project-scoped | `./.skills/agent-memory` or your tool's skills path |
+
+## Usage
+
+You don't run anything by hand. Once installed, ask your agent in natural
+language; it loads the skill and runs the bundled scripts for you.
+
+> Use **agent-memory** to bootstrap a memory system for this project, with
+> features Search and Billing, and add the workflow to AGENTS.md.
+
+The agent scaffolds the memory tree, registers the features, wires up the agents
+file, and from then on reads and updates memory according to the
+[contract](references/memory-file-contract.md).
+
+### Default location
+
+Memory is created under `.codex/memory` by default. If your agent uses another
+convention, ask it to use a different directory (for example `.agent/memory`);
+both bundled scripts accept `--memory-dir`.
+
+### Manual / advanced invocation
+
+The bundled scripts are an implementation detail the agent calls, but you can run
+them directly to debug or to script CI. Preview without writing:
 
 ```bash
 python3 scripts/bootstrap_memory.py --project-root . --feature "Search" --dry-run
 ```
 
-Create the memory system for real:
+Apply, validate, and optionally use a custom location:
 
 ```bash
-python3 scripts/bootstrap_memory.py \
-  --project-root . \
-  --feature "Search" \
-  --feature "Billing" \
-  --agents
-```
-
-Validate an existing memory tree against the contract:
-
-```bash
+python3 scripts/bootstrap_memory.py --project-root . --feature "Search" --feature "Billing" --agents
 python3 scripts/validate_memory.py --project-root .
+python3 scripts/bootstrap_memory.py --project-root . --memory-dir .agent/memory --feature "Search"
 ```
 
 | Flag | Description |
 | --- | --- |
 | `--project-root` | Target project root. Defaults to the current directory. |
 | `--feature` | Feature capsule to create and register. Repeatable. |
-| `--agents` | Create or refresh the `Project Memory Workflow` section in `AGENTS.md`. |
+| `--memory-dir` | Memory directory relative to the project root. Defaults to `.codex/memory`. |
+| `--agents` | Create or refresh the `Project Memory Workflow` section in the agents file. |
+| `--agents-file` | Agents instructions file. Defaults to `AGENTS.md`. |
 | `--dry-run` | Report what would change without touching the filesystem. |
 
 The bootstrap script is **idempotent**: it creates missing files, refreshes
