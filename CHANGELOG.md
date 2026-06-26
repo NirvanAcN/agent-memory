@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/test_memory.py`: pytest suite covering bootstrap helpers, idempotency, dry-run, and the validator.
 - `--dry-run` flag for `scripts/bootstrap_memory.py`.
 - Chinese README (`README.zh-CN.md`) and contributing guide (`CONTRIBUTING.zh-CN.md`).
-- Open-source infrastructure: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`, `pyproject.toml`, GitLab CI, and issue/MR templates.
+- Open-source infrastructure: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`, `pyproject.toml`, and contribution templates.
 
 ### Changed
 

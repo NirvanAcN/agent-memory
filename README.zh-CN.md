@@ -59,7 +59,7 @@
 将它 clone 到你的智能体 skills 目录即可：
 
 ```bash
-git clone https://gitlab.com/jamesedu-group/agent-memory.git \
+git clone https://github.com/NirvanAcN/agent-memory.git \
   <skills-dir>/agent-memory
 ```
 

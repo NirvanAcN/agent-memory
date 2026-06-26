@@ -60,7 +60,7 @@ contracts. Everything else stays local to a single feature capsule.
 skills format. Clone it into your agent's skills directory:
 
 ```bash
-git clone https://gitlab.com/jamesedu-group/agent-memory.git \
+git clone https://github.com/NirvanAcN/agent-memory.git \
   <skills-dir>/agent-memory
 ```
 
