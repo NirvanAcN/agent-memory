@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as _dt
+import json
 import re
 from pathlib import Path
 
@@ -23,6 +24,15 @@ CAPSULE_SECTIONS = [
     "Key Decisions",
     "Regression Checks",
 ]
+
+DEFAULT_CONTEXT_BUDGET = {
+    "version": 1,
+    "max_agents_bytes": 8 * 1024,
+    "max_routing_bytes": 8 * 1024,
+    "max_capsule_lines": 128,
+    "max_capsule_bytes": 12 * 1024,
+    "debt": {},
+}
 
 
 def today() -> str:
@@ -112,6 +122,7 @@ This directory stores stable project facts and decisions for future Codex tasks.
 - `feature-registry.md`: feature list and capsule pointers.
 - `decision-log.md`: durable project decisions.
 - `features/_template.md`: template for new feature capsules.
+- `context-budget.json`: machine-readable limits; agents do not read it during normal task routing.
 
 ## Write-Back Rules
 
@@ -123,8 +134,15 @@ This directory stores stable project facts and decisions for future Codex tasks.
 - If the registry lacks the exact target feature, use the closest existing capsule first.
 - Update `feature-registry.md` only when adding or changing stable feature metadata.
 - Consider splitting capsules that exceed about 100 lines or mix unrelated responsibilities. Split by function or role such as selection, layout, SDK routing, assets, or persistence. Keep the original capsule as the high-level responsibility and routing summary, move only stable facts, update `feature-registry.md`, and refresh every touched `Last Updated`.
+- Keep the normal working set to the agent guide, index, registry, and one capsule. Do not re-read unchanged content. Before loading another capsule or global file, identify the missing fact and use the narrowest relevant range.
+- Run the `agent-memory` skill's bundled validator after memory-policy changes. Standard context limits live in `context-budget.json`; explicit legacy debt may shrink but must not grow.
 - Add `Source` or `Evidence` for key conclusions that are non-obvious, cross-module, risky, or likely to be challenged. Use `Last Verified`, `Valid Since`, `Deprecated`, `Superseded by`, or `Revisit Trigger` when time validity matters; simple stable facts do not need metadata on every bullet.
 """
+
+
+def context_budget_template(stamp: str) -> str:
+    config = {"last_updated": stamp, **DEFAULT_CONTEXT_BUDGET}
+    return json.dumps(config, indent=2) + "\n"
 
 
 def project_memory_template(stamp: str) -> str:
@@ -254,6 +272,8 @@ If the registry does not contain an exact target feature, use the closest existi
 
 Read `project-memory.md` and `decision-log.md` only when the task changes cross-module routing, dependency strategy, persistence strategy, or global behavior contracts.
 
+Keep the default working set to this guide, the memory index, the registry, and one capsule. Do not re-read unchanged files or command output. Before reading another capsule, a global memory file, or a legacy aggregate, identify the missing fact and use the narrowest heading, range, or query that answers it.
+
 Feature-only changes: update only the corresponding `.codex/memory/features/<Feature>.md`; update `feature-registry.md` only if feature metadata changed.
 
 Global changes: update `project-memory.md`, `decision-log.md`, and `index.md` in the same change set.
@@ -261,6 +281,8 @@ Global changes: update `project-memory.md`, `decision-log.md`, and `index.md` in
 If memory conflicts with code, code is source of truth; fix memory in the same task.
 
 When a capsule exceeds about 100 lines or mixes responsibilities enough that agents must read large unrelated sections, split it by function or role such as selection, layout, SDK routing, assets, or persistence. Keep the original capsule as the high-level responsibility and routing summary, move only stable facts, update `feature-registry.md`, and refresh every touched `Last Updated`.
+
+Run the `agent-memory` skill's bundled validator after memory-policy or capsule changes. `context-budget.json` is machine-readable validation configuration and is not part of the normal read path. Standard capsules must remain within its line and byte budgets. Explicit legacy debt may shrink but must not grow.
 
 Every memory update must refresh `Last Updated: YYYY-MM-DD`.
 
@@ -315,6 +337,13 @@ def main() -> int:
     ensure_feature_registry(memory_dir / "feature-registry.md", args.feature, stamp, changes)
     ensure_decision_log(memory_dir / "decision-log.md", stamp, changes)
     ensure_file(features_dir / "_template.md", template_capsule(stamp), stamp, changes, str(features_dir / "_template.md"))
+    if not (memory_dir / "context-budget.json").exists():
+        write_changed(
+            memory_dir / "context-budget.json",
+            context_budget_template(stamp),
+            changes,
+            str(memory_dir / "context-budget.json"),
+        )
 
     for feature in args.feature:
         ensure_capsule(features_dir / f"{slugify_feature(feature)}.md", feature, stamp, changes)

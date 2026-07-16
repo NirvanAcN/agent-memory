@@ -1,6 +1,6 @@
 ---
 name: agent-memory
-description: Create and maintain project-local agent memory systems. Use when a user asks to bootstrap `.codex/memory` (or a custom memory directory), create a sustainable agent memory architecture, enforce minimum-read/scoped-write-back rules, add Project Memory Workflow guidance to AGENTS.md, or update project memory files after a task.
+description: Create, audit, and maintain bounded project-local agent memory systems. Use when a user asks to bootstrap `.codex/memory` (or a custom memory directory), govern agent context growth, enforce measurable guide/routing/capsule budgets, migrate oversized memory into no-growth debt, enforce minimum-read/scoped-write-back rules, add Project Memory Workflow guidance to AGENTS.md, or update project memory files after a task.
 ---
 
 # Agent Memory
@@ -42,8 +42,29 @@ Defaults:
 - `--project-root` defaults to the current working directory.
 - No `--feature` arguments creates only shared memory files plus `features/_template.md`.
 - `--agents` creates or refreshes the `Project Memory Workflow` section in `AGENTS.md`.
+- New scaffolds include `context-budget.json`; it is validator configuration,
+  not part of the agent's normal read path.
 
 The script is idempotent. It creates missing files, refreshes freshness markers, ensures required table headers/sections exist, and avoids overwriting existing human-authored memory content.
+
+## Context Budget
+
+Validate the memory tree after bootstrap and after memory-policy or capsule changes:
+
+```bash
+python3 scripts/validate_memory.py --project-root <path>
+```
+
+The generated defaults cap the agents guide and index-plus-registry route at 8
+KiB each, and standard capsules at 128 lines and 12 KiB. Projects may change
+these values in `context-budget.json` when they have a documented reason.
+
+For an existing tree, create the config by re-running bootstrap, then validate.
+Split oversized capsules first. If an oversized capsule cannot be migrated in
+one change, add its exact current line and byte counts to the `debt` map. Debt
+may shrink but must not grow; remove the entry after the capsule fits the
+standard budget. Never raise a debt ceiling merely to make unexplained growth
+pass validation.
 
 ## Write-Back Rules
 
@@ -55,5 +76,8 @@ Use the smallest write scope that captures stable facts and decisions:
 - Capsule splitting: when a capsule grows beyond about 100 lines or mixes responsibilities enough that agents must read large unrelated sections, split it into narrower capsules by function or role such as selection, layout, SDK routing, assets, or persistence. Keep the original capsule as the high-level responsibility and routing summary. Move only stable facts, refresh every touched `Last Updated`, and update `feature-registry.md`.
 - Evidence and freshness: keep memory body focused on stable facts, decisions, and regression checks. Add `Source` or `Evidence` for key conclusions that are non-obvious, cross-module, risky, or likely to be challenged. Use `Last Verified`, `Valid Since`, `Deprecated`, `Superseded by`, and `Revisit Trigger` when time validity matters; simple stable facts do not need metadata on every bullet.
 - Do not store temporary execution steps, transient errors, or chat narration in memory.
+- Run `scripts/validate_memory.py` after changing memory structure, routing, or
+  budget configuration.
 
-For exact file contracts, required headings, and table headers, read `references/memory-file-contract.md`.
+For exact file contracts, budget schema, migration rules, required headings,
+and table headers, read `references/memory-file-contract.md`.
