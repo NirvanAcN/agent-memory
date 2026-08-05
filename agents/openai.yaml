@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Memory"
+  short_description: "Bootstrap, upgrade, and govern bounded project memory"
+  default_prompt: "Use $agent-memory to create, upgrade, or audit a bounded project-local memory workflow."
